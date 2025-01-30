@@ -5,11 +5,6 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { useToast } from './ui/use-toast';
-import { useEffect, useState } from 'react';
-<<<<<<< HEAD
-=======
-
->>>>>>> b1b3592d3d425b2dd7287918b81f1d0364fe1c32
 
 interface MeetingCardProps {
   title: string;
@@ -35,10 +30,6 @@ const MeetingCard = ({
   buttonText,
 }: MeetingCardProps) => {
   const { toast } = useToast();
-<<<<<<< HEAD
-=======
-  
->>>>>>> b1b3592d3d425b2dd7287918b81f1d0364fe1c32
 
   return (
     <section className="flex min-h-[258px] w-full flex-col justify-between rounded-[14px] bg-dark-1 px-5 py-8 xl:max-w-[568px]">
@@ -52,10 +43,6 @@ const MeetingCard = ({
         </div>
       </article>
 
-<<<<<<< HEAD
-=======
-
->>>>>>> b1b3592d3d425b2dd7287918b81f1d0364fe1c32
       <article className={cn('flex justify-center relative', {})}>
         <div className="relative flex w-full max-sm:hidden"></div>
         {!isPreviousMeeting && (
