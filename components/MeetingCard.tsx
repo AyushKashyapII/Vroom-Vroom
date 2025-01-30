@@ -6,8 +6,6 @@ import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { useToast } from './ui/use-toast';
 import { useEffect, useState } from 'react';
-import { Client } from '@clerk/nextjs/server';
-import { useCall } from '@stream-io/video-react-sdk';
 
 interface MeetingCardProps {
   title: string;
@@ -33,26 +31,6 @@ const MeetingCard = ({
   buttonText,
 }: MeetingCardProps) => {
   const { toast } = useToast();
-  const [totalParticipants, setTotalParticipants] = useState<number>(0);
-
-  useEffect(() => {
-    if (isPreviousMeeting && callId) {
-      fetchCallParticipants(callId);
-    }
-  }, [isPreviousMeeting, callId]);
-
-  const fetchCallParticipants = async (callId: string) => {
-    try {
-      const call = await useCall();
-
-      if (call) {
-        const participants = call.state.participants;
-        setTotalParticipants(Object.keys(participants).length);
-      }
-    } catch (error) {
-      console.error('Error fetching participants:', error);
-    }
-  };
 
   return (
     <section className="flex min-h-[258px] w-full flex-col justify-between rounded-[14px] bg-dark-1 px-5 py-8 xl:max-w-[568px]">
@@ -65,12 +43,6 @@ const MeetingCard = ({
           </div>
         </div>
       </article>
-
-      {isPreviousMeeting && totalParticipants > 0 && (
-        <div className="mt-4 text-lg font-medium text-sky-1">
-          Total Participants: {totalParticipants}
-        </div>
-      )}
 
       <article className={cn('flex justify-center relative', {})}>
         <div className="relative flex w-full max-sm:hidden"></div>

@@ -447,5 +447,10 @@ Enjoyed creating this project? Dive deeper into our PRO courses for a richer lea
 </a>
 =======
 # Vroom-Vroom
+<<<<<<< HEAD
 Zoom clone
 >>>>>>> 8dfd353fbda3d9904ac41503a50ff26ada76d645
+=======
+
+This is a Zoom clone project.
+>>>>>>> 09a2fdb1c93b2046255fd666cc76b5918ea4afe0
