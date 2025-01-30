@@ -4,7 +4,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { Sheet, SheetClose, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { sidebarLinks } from '@/constants';
 import { cn } from '@/lib/utils';
 
@@ -26,10 +31,10 @@ const MobileNav = () => {
         <SheetContent side="left" className="border-none bg-dark-1">
           <Link href="/" className="flex items-center gap-1">
             <Image
-              src="/icons/logo.svg"
+              src="/icons/logo.png"
               width={32}
               height={32}
-              alt="yoom logo"
+              alt="vroom logo"
             />
             <p className="text-[26px] font-extrabold text-white">YOOM</p>
           </Link>
@@ -48,7 +53,7 @@ const MobileNav = () => {
                           'flex gap-4 items-center p-4 rounded-lg w-full max-w-60',
                           {
                             'bg-blue-1': isActive,
-                          }
+                          },
                         )}
                       >
                         <Image

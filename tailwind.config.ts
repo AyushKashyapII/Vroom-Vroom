@@ -20,29 +20,34 @@ const config = {
     extend: {
       colors: {
         dark: {
-          1: '#1C1F2E',
-          2: '#161925',
-          3: '#252A41',
-          4: '#1E2757',
+          1: '#8B6F47', // Warm mocha brown (white text readable)  
+          2: '#D1BFA3', // Muted beige brown  
+          3: '#E3D5C3', // Soft sand  
+          4: '#F2E8DA', // Light cream  
+          5: '#7A5C3E', // Rich walnut brown (earthy, warm)  
         },
         blue: {
-          1: '#0E78F9',
+          1: '#A67C52', // Soft rose pink  
         },
-        sky: {
-          1: '#C9DDFF',
-          2: '#ECF0FF',
-          3: '#F5FCFF',
+        green: {
+          1: '#27AE60', // Fresh mint green  
+        },
+        red: {
+          1: '#E74C3C', // Soft coral red  
         },
         orange: {
-          1: '#FF742E',
+          1: '#F39C12', // Warm sunset orange  
         },
         purple: {
-          1: '#830EF9',
+          1: '#9B59B6', // Light royal purple  
         },
         yellow: {
-          1: '#F9A90E',
+          1: '#F1C40F', // Bright golden yellow  
         },
       },
+    
+
+    
       keyframes: {
         'accordion-down': {
           from: { height: '0' },
@@ -58,7 +63,7 @@ const config = {
         'accordion-up': 'accordion-up 0.2s ease-out',
       },
       backgroundImage: {
-        hero: "url('/images/hero-background.png')",
+        hero: "url('/images/background.jpg')",
       },
     },
   },

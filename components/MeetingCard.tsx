@@ -1,16 +1,19 @@
-"use client";
+'use client';
 
-import Image from "next/image";
+import Image from 'next/image';
 
-import { cn } from "@/lib/utils";
-import { Button } from "./ui/button";
-import { avatarImages } from "@/constants";
-import { useToast } from "./ui/use-toast";
+import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
+import { useToast } from './ui/use-toast';
+import { useEffect, useState } from 'react';
+import { Client } from '@clerk/nextjs/server';
+import { useCall } from '@stream-io/video-react-sdk';
 
 interface MeetingCardProps {
   title: string;
   date: string;
   icon: string;
+  callId: string;
   isPreviousMeeting?: boolean;
   buttonIcon1?: string;
   buttonText?: string;
@@ -22,6 +25,7 @@ const MeetingCard = ({
   icon,
   title,
   date,
+  callId,
   isPreviousMeeting,
   buttonIcon1,
   handleClick,
@@ -29,6 +33,26 @@ const MeetingCard = ({
   buttonText,
 }: MeetingCardProps) => {
   const { toast } = useToast();
+  const [totalParticipants, setTotalParticipants] = useState<number>(0);
+
+  useEffect(() => {
+    if (isPreviousMeeting && callId) {
+      fetchCallParticipants(callId);
+    }
+  }, [isPreviousMeeting, callId]);
+
+  const fetchCallParticipants = async (callId: string) => {
+    try {
+      const call = await useCall();
+
+      if (call) {
+        const participants = call.state.participants;
+        setTotalParticipants(Object.keys(participants).length);
+      }
+    } catch (error) {
+      console.error('Error fetching participants:', error);
+    }
+  };
 
   return (
     <section className="flex min-h-[258px] w-full flex-col justify-between rounded-[14px] bg-dark-1 px-5 py-8 xl:max-w-[568px]">
@@ -41,23 +65,15 @@ const MeetingCard = ({
           </div>
         </div>
       </article>
-      <article className={cn("flex justify-center relative", {})}>
-        <div className="relative flex w-full max-sm:hidden">
-          {avatarImages.map((img, index) => (
-            <Image
-              key={index}
-              src={img}
-              alt="attendees"
-              width={40}
-              height={40}
-              className={cn("rounded-full", { absolute: index > 0 })}
-              style={{ top: 0, left: index * 28 }}
-            />
-          ))}
-          <div className="flex-center absolute left-[136px] size-10 rounded-full border-[5px] border-dark-3 bg-dark-4">
-            +5
-          </div>
+
+      {isPreviousMeeting && totalParticipants > 0 && (
+        <div className="mt-4 text-lg font-medium text-sky-1">
+          Total Participants: {totalParticipants}
         </div>
+      )}
+
+      <article className={cn('flex justify-center relative', {})}>
+        <div className="relative flex w-full max-sm:hidden"></div>
         {!isPreviousMeeting && (
           <div className="flex gap-2">
             <Button onClick={handleClick} className="rounded bg-blue-1 px-6">
@@ -70,17 +86,17 @@ const MeetingCard = ({
               onClick={() => {
                 navigator.clipboard.writeText(link);
                 toast({
-                  title: "Link Copied",
+                  title: 'Link Copied',
                 });
               }}
               className="bg-dark-4 px-6"
             >
-              <Image
+              {/* <Image
                 src="/icons/copy.svg"
                 alt="feature"
                 width={20}
                 height={20}
-              />
+              /> */}
               &nbsp; Copy Link
             </Button>
           </div>
