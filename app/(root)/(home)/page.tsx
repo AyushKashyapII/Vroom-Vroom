@@ -1,5 +1,6 @@
 'use client';
 import MeetingTypeList from '@/components/MeetingTypeList';
+import Image from 'next/image';
 
 import { useState } from 'react';
 
@@ -21,7 +22,7 @@ const Home = () => {
   }).format(now);
 
   return (
-    <section className="flex size-full flex-col gap-5 text-white overflow-y-hidden scrollbar-hide">
+    <section className="flex size-full flex-col gap-5 text-white overflow-y-hidden">
       <div className="h-[303px] w-full rounded-[20px] bg-hero bg-cover">
         <div className="flex h-full flex-col justify-between max-md:px-5 max-md:py-8 lg:p-11">
           <h2 className="glassmorphism max-w-[273px] rounded py-2 text-center text-base font-normal">
@@ -36,7 +37,7 @@ const Home = () => {
 
       <div className="flex flex-row ">
         <MeetingTypeList />
-        <div className="flex justify-center items-center relative -top-[140px] left-[18px]">
+        <div className="flex justify-center items-center relative top-[-140px] left-[18px]">
           <img
             src="/icons/programming.png"
             width={100}
@@ -73,8 +74,8 @@ const Home = () => {
                 on, but the feeling of finally completing it is absolutely
                 amazing!
               </p>
-              <div className="flex justify-center items-center w-full br-3">
-                <img src="/images/leo.png" width={400}></img>
+              <div className="flex justify-center items-center w-full">
+                <Image src="/images/leo.png" width={400} alt="Image" />
               </div>
             </div>
           </div>
