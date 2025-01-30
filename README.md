@@ -1,2 +1,3 @@
 # Vroom-Vroom
-Zoom clone
+
+This is a Zoom clone project.
