@@ -16,6 +16,11 @@ interface MeetingCardProps {
   buttonText?: string;
   handleClick: () => void;
   link: string;
+  buttonText2?: string;
+  handleClick2?: () => void;
+  isRecordingAvailable?: boolean;
+  additionalButton?: () => void;
+  handleSummarize?: () => void;
 }
 
 const MeetingCard = ({
@@ -28,6 +33,11 @@ const MeetingCard = ({
   handleClick,
   link,
   buttonText,
+  buttonText2,
+  handleClick2,
+  isRecordingAvailable,
+  additionalButton,
+  handleSummarize,
 }: MeetingCardProps) => {
   const { toast } = useToast();
 
@@ -45,6 +55,7 @@ const MeetingCard = ({
 
       <article className={cn('flex justify-center relative', {})}>
         <div className="relative flex w-full max-sm:hidden"></div>
+
         {!isPreviousMeeting && (
           <div className="flex gap-2">
             <Button onClick={handleClick} className="rounded bg-blue-1 px-6">
@@ -52,6 +63,12 @@ const MeetingCard = ({
                 <Image src={buttonIcon1} alt="feature" width={20} height={20} />
               )}
               &nbsp; {buttonText}
+            </Button>
+            <Button
+              onClick={handleSummarize}
+              className="rounded bg-blue-1 px-6"
+            >
+              Summarize
             </Button>
             <Button
               onClick={() => {
@@ -62,15 +79,18 @@ const MeetingCard = ({
               }}
               className="bg-dark-4 px-6"
             >
-              {/* <Image
-                src="/icons/copy.svg"
-                alt="feature"
-                width={20}
-                height={20}
-              /> */}
               &nbsp; Copy Link
             </Button>
           </div>
+        )}
+
+        {isPreviousMeeting && isRecordingAvailable && (
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+            onClick={() => console.log('Recording exists')}
+          >
+            Recording Exists
+          </button>
         )}
       </article>
     </section>
