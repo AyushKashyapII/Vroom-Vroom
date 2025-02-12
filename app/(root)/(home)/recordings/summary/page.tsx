@@ -1,7 +1,7 @@
 'use client';
-import React from 'react';
+
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import React,{ useState } from 'react';
 
 interface Message {
   type: 'question' | 'answer';
