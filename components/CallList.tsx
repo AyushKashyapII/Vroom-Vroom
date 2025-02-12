@@ -6,13 +6,13 @@ import { useGetCalls } from '@/hooks/useGetCalls';
 import MeetingCard from './MeetingCard';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-
 import axios from 'axios';
 
 interface TranscriptionResponse {
   transcription: string;
   summary: string;
 }
+
 const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
   const router = useRouter();
   const { endedCalls, upcomingCalls, callRecordings, isLoading } =
@@ -53,31 +53,23 @@ const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
 
   const summarizeRecording = async (videoUrl: string) => {
     setIsProcessing(true);
-    console.log('Downloading from video URL...', videoUrl);
-
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/transcribe`,
         { videoUrl },
       );
-
       if (response.status !== 200) {
         throw new Error(`Server error: ${response.statusText}`);
       }
-
-      // Encode the data for URL
       const encodedData = encodeURIComponent(
         JSON.stringify({
           transcription: response.data.transcription,
           summary: response.data.summary,
         }),
       );
-
-      // Navigate with the data
       router.push(`/recordings/summary?data=${encodedData}`);
     } catch (error) {
       console.error('Error:', error);
-      // Handle error state here
     } finally {
       setIsProcessing(false);
     }

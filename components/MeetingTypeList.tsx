@@ -70,7 +70,7 @@ const MeetingTypeList = () => {
   const meetingLink = `${process.env.NEXT_PUBLIC_BASE_URL}/meeting/${callDetail?.id}`;
 
   return (
-    <section className="grid grid-cols-2 grid-rows-2 gap-5 md:grid-cols-2 xl:grid-cols-4 w-[87%] overflow-y-hidden">
+    <section className="grid w-[87%] grid-cols-2 grid-rows-2 gap-5 overflow-y-hidden md:grid-cols-2 xl:grid-cols-4">
       <HomeCard
         img="/icons/add-meeting.svg"
         title="New Meeting"

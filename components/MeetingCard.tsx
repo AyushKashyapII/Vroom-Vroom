@@ -42,7 +42,7 @@ const MeetingCard = ({
   const { toast } = useToast();
 
   return (
-    <section className="flex min-h-[258px] w-full flex-col justify-between rounded-[14px] bg-dark-1 px-5 py-8 xl:max-w-[568px]">
+    <section className="flex w-full min-h-[258px] flex-col justify-between rounded-xl bg-dark-1 px-5 py-8 xl:max-w-[568px]">
       <article className="flex flex-col gap-5">
         <Image src={icon} alt="upcoming" width={28} height={28} />
         <div className="flex justify-between">
@@ -53,8 +53,8 @@ const MeetingCard = ({
         </div>
       </article>
 
-      <article className={cn('flex justify-center relative', {})}>
-        <div className="relative flex w-full max-sm:hidden"></div>
+      <article className={cn('relative flex justify-center', {})}>
+        <div className="relative hidden w-full max-sm:block"></div>
 
         {!isPreviousMeeting && (
           <div className="flex gap-2">
@@ -86,7 +86,7 @@ const MeetingCard = ({
 
         {isPreviousMeeting && isRecordingAvailable && (
           <button
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+            className="rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
             onClick={() => console.log('Recording exists')}
           >
             Recording Exists

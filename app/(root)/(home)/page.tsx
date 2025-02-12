@@ -23,13 +23,13 @@ const Home = () => {
   return (
     <section className="flex flex-col gap-5 text-white size-full overflow-y-hidden">
       <div className="w-full h-[303px] bg-cover rounded-[20px] bg-hero">
-        <div className="flex flex-col justify-between h-full max-md:py-8 max-md:px-5 lg:p-11">
+        <div className="flex flex-col justify-between h-full lg:p-11 max-md:py-8 max-md:px-5">
           <h2 className="py-2 text-base font-normal text-center rounded glassmorphism max-w-[273px]">
             Schedule your meetings ahead
           </h2>
           <div className="flex flex-col gap-2">
             <h1 className="text-4xl font-extrabold lg:text-7xl">{time}</h1>
-            <p className="text-lg font-medium text-sky-500 lg:text-2xl">
+            <p className="text-lg font-medium lg:text-2xl text-sky-500">
               {date}
             </p>
           </div>
