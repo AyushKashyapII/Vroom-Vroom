@@ -39,13 +39,13 @@ const Home = () => {
       <div className="flex flex-row">
         <MeetingTypeList />
         <div className="relative flex items-center justify-center top-[-140px] left-[18px]">
-          <img
+          <Image
             src="/icons/programming.png"
             width={100}
-            onClick={() => {
-              setShowInfo(true);
-            }}
-          ></img>
+            height={100}
+            alt="Programming Icon"
+            onClick={() => setShowInfo(true)}
+          />
         </div>
       </div>
       {showInfo && (
