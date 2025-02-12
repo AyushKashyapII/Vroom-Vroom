@@ -3,36 +3,6 @@ import { HfInference } from "@huggingface/inference";
 import fs from "fs";
 import path from "path";
 import { promisify } from "util";
-//import { createRAG, RAGConfig } from 'rag-module';
-
-// const config: RAGConfig = {
-//   googleApiKey: process.env.GOOGLE_API_KEY as string,
-//   qdrantUrl: process.env.QDRANT_URL as string,
-//   qdrantApiKey:  process.env.QDRANT_API_KEY as string,
-//   groqApiKey: process.env.GROQ_API_KEY as string,
-//   collectionName: 'custom-collection',
-//   fallbackResponse: 'Sorry, I could not find relevant information.',
-//   prompts: {
-//     classification: `I am providing you a query, based on the query your work is detect whether 
-//     that is related to marks, events or general information. Query: {query}`,
-//     response: `You are a helpful assistant. Based on this context: "{context}", 
-//     please answer this question: "{query}"`
-// }
-// };
-// const rag = createRAG(config);
-
-// async function main() {
-//   try {
-//       const result = await rag.processQuery(
-//           "Your context text here...",
-//           "Your query here..."
-//       );
-//       console.log('Response:', result.response);
-//       console.log('Category:', result.category);
-//   } catch (error) {
-//       console.error('Error:', error);
-//   }
-// }
 
 const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
@@ -78,7 +48,7 @@ async function cleanupFiles(...files: string[]) {
 async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
   console.log("🎯 Starting transcription with HuggingFace...");
   try {
-    // Convert Buffer to Blob
+   
     const blob = new Blob([audioBuffer], { type: 'audio/mp3' });
     
     const transcription = await hf.automaticSpeechRecognition({

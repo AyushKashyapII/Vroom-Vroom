@@ -6,7 +6,7 @@ import { useGetCalls } from '@/hooks/useGetCalls';
 import MeetingCard from './MeetingCard';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import OpenAI from 'openai';
+
 import axios from 'axios';
 
 interface TranscriptionResponse {
@@ -15,10 +15,6 @@ interface TranscriptionResponse {
 }
 const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
   const router = useRouter();
-  //const ffmpeg = require('fluent-ffmpeg');
-  // const openai = new OpenAI({
-  //   apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
-  // });
   const { endedCalls, upcomingCalls, callRecordings, isLoading } =
     useGetCalls();
   const [isProcessing, setIsProcessing] = useState(false);
