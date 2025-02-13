@@ -8,10 +8,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
-interface TranscriptionResponse {
-  transcription: string;
-  summary: string;
-}
+// interface TranscriptionResponse {
+//   transcription: string;
+//   summary: string;
+// }
 
 const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
   const router = useRouter();
