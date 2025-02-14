@@ -9,6 +9,10 @@ const unlink = promisify(fs.unlink);
 const readFile = promisify(fs.readFile);
 
 console.log("🚀 Initializing HuggingFace client...");
+if (!process.env.HUGGINGFACE_API_KEY) {
+  console.error('❌ API Route: HUGGINGFACE_API_KEY is not set in environment variables');
+  throw new Error('HUGGINGFACE_API_KEY is not configured');
+}
 const hf = new HfInference(process.env.HUGGINGFACE_API_KEY!);
 console.log("✅ HuggingFace client initialized");
 
