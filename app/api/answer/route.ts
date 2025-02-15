@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       
       Question: ${question}
       
-      Please provide a clear and concise answer to the question based on the context provided above.
+      Please provide a clear and concise answer to the question based on the context provided above assuming that uyou are a chat assisstant.
       If the answer cannot be found in the context, please respond with "I cannot find an answer to this question in the provided context."
     `;
 
