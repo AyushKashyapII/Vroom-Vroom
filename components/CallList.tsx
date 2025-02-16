@@ -54,10 +54,7 @@ const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
   const summarizeRecording = async (videoUrl: string) => {
     setIsProcessing(true);
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/transcribe`,
-        { videoUrl },
-      );
+      const response = await axios.post(`/api/transcribe`, { videoUrl });
       if (response.status !== 200) {
         throw new Error(`Server error: ${response.statusText}`);
       }
@@ -70,6 +67,9 @@ const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
       router.push(`/recordings/summary?data=${encodedData}`);
     } catch (error) {
       console.error('Error:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Response data:', error.response?.data);
+      }
     } finally {
       setIsProcessing(false);
     }

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^5.7.5",
+    "@ffmpeg/ffmpeg": "^0.12.15",
     "@huggingface/inference": "^3.3.3",
     "@langchain/google-genai": "^0.1.8",
     "@qdrant/js-client-rest": "^1.13.0",
