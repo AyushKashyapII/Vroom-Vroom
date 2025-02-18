@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { HfInference } from "@huggingface/inference";
-import ffmpeg from "fluent-ffmpeg";
 import { tmpdir } from "os";
 import path from "path";
 import { promisify } from "util";
 import fs from "fs";
-import ffmpegPath from "@ffmpeg-installer/ffmpeg";
-ffmpeg.setFfmpegPath(ffmpegPath.path);
+
+let ffmpeg: any;
+if (process.env.NODE_ENV === 'production') {
+  const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+  ffmpeg = require('fluent-ffmpeg');
+  ffmpeg.setFfmpegPath(ffmpegPath);
+} else {
+  const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+  ffmpeg = require('fluent-ffmpeg');
+  ffmpeg.setFfmpegPath(ffmpegPath);
+}
 
 const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
@@ -56,20 +64,31 @@ async function cleanupFiles(...files: string[]) {
 async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
   console.log("🎯 Starting transcription with HuggingFace...");
   try {
-    const blob = new Blob([audioBuffer], { type: 'audio/mp3' });
-    
-    const transcription = await hf.automaticSpeechRecognition({
-      data: blob,
-      model: "openai/whisper-large-v3",
-      parameters: {
-        language: "en",
-        return_timestamps: false,  
-        chunk_length_s: 30
-      }
-    });
+    // Create FormData and append the audio buffer
+    const formData = new FormData();
+    const audioBlob = new Blob([audioBuffer], { type: 'audio/mp3' });
+    formData.append('audio', audioBlob, 'audio.mp3');
 
-    console.log("✅ Transcription completed");
-    return transcription.text;
+    // Make a direct fetch request to HuggingFace API
+    const response = await fetch(
+      `https://api-inference.huggingface.co/models/openai/whisper-large-v3`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.HUGGINGFACE_API_KEY}`
+        },
+        body: formData
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HuggingFace API error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log("✅ Transcription completed", result);
+    return result.text;
+
   } catch (error) {
     console.error("❌ Transcription error:", error);
     throw new Error(`Transcription failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
