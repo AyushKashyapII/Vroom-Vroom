@@ -7,6 +7,7 @@ import MeetingCard from './MeetingCard';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 // interface TranscriptionResponse {
 //   transcription: string;
@@ -54,7 +55,16 @@ const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
   const summarizeRecording = async (videoUrl: string) => {
     setIsProcessing(true);
     try {
-      const response = await axios.post(`/api/transcribe`, { videoUrl });
+      const response = await axios.post(
+        `/api/transcribe`,
+        { videoUrl },
+        {
+          timeout: 300000,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
       if (response.status !== 200) {
         throw new Error(`Server error: ${response.statusText}`);
       }
@@ -66,10 +76,18 @@ const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
       );
       router.push(`/recordings/summary?data=${encodedData}`);
     } catch (error) {
-      console.error('Error:', error);
       if (axios.isAxiosError(error)) {
-        console.error('Response data:', error.response?.data);
+        console.error('Axios Error:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          headers: error.response?.headers,
+        });
+      } else {
+        console.error('Error:', error);
       }
+      // Show error to user
+      toast.error('Failed to process recording. Please try again.');
     } finally {
       setIsProcessing(false);
     }

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { HfInference } from "@huggingface/inference";
-import fs from "fs";
+import ffmpeg from "fluent-ffmpeg";
+import { tmpdir } from "os";
 import path from "path";
 import { promisify } from "util";
+import fs from "fs";
 
 const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
@@ -17,7 +19,7 @@ const hf = new HfInference(process.env.HUGGINGFACE_API_KEY!);
 console.log("✅ HuggingFace client initialized");
 
 async function fetchWithTimeout(url: string, timeout: number) {
-  console.log("⏳ Starting fetch with timeout:", url);
+  console.log("⏳ Starting fetch with timeout:", timeout);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -52,7 +54,6 @@ async function cleanupFiles(...files: string[]) {
 async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
   console.log("🎯 Starting transcription with HuggingFace...");
   try {
-   
     const blob = new Blob([audioBuffer], { type: 'audio/mp3' });
     
     const transcription = await hf.automaticSpeechRecognition({
@@ -75,7 +76,7 @@ async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
 
 async function generateSummary(text: string, maxRetries = 3): Promise<string> {
   console.log(`🤖 Starting summary generation (max retries: ${maxRetries})`);
-  console.log(`📝 Text length to summarize11: ${text.length} characters`);
+  console.log(`📝 Text length to summarize: ${text.length} characters`);
   
   let attempt = 0;
   while (attempt < maxRetries) {
@@ -91,7 +92,7 @@ async function generateSummary(text: string, maxRetries = 3): Promise<string> {
         }
       });
       
-      console.log("✅ Summary generated successfully",summary.summary_text);
+      console.log("✅ Summary generated successfully");
       return summary.summary_text;
     } catch (error) {
       attempt++;
@@ -99,7 +100,7 @@ async function generateSummary(text: string, maxRetries = 3): Promise<string> {
       
       if (attempt === maxRetries) {
         console.error("❌ All summary attempts exhausted");
-        throw new Error(`Failed to generate summary after ${maxRetries} attempts: ${error}`);
+        throw new Error(`Failed to generate summary after ${maxRetries} attempts`);
       }
       
       await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
@@ -110,12 +111,12 @@ async function generateSummary(text: string, maxRetries = 3): Promise<string> {
 
 export async function POST(req: NextRequest) {
   console.log("\n🎬 Starting new transcription request...");
-  const videoPath = path.join(process.cwd(), "temp.mp4");
-  const audioPath = path.join(process.cwd(), "temp.mp3");
+  const videoPath = path.join(tmpdir(), `temp-${Date.now()}.mp4`);
+  const audioPath = path.join(tmpdir(), `temp-${Date.now()}.mp3`);
 
   try {
     const { videoUrl } = await req.json();
-    console.log("📌 Video URL received:", videoUrl);
+    console.log("📌 Video URL received:");
 
     if (!videoUrl) {
       return NextResponse.json(
@@ -135,19 +136,21 @@ export async function POST(req: NextRequest) {
     // Save video file
     const buffer = await videoResponse.arrayBuffer();
     await writeFile(videoPath, new Uint8Array(buffer));
+    console.log("✅ Video file saved");
 
     // Convert to audio with optimal settings for Whisper
     await new Promise((resolve, reject) => {
-      const ffmpeg = require("fluent-ffmpeg");
       ffmpeg(videoPath)
         .toFormat("mp3")
         .audioChannels(1)          
         .audioFrequency(16000)     
         .audioBitrate('64k')       
         .on("error", (err: Error) => {
+          console.error("❌ FFmpeg error:", err);
           reject(new Error(`Audio conversion failed: ${err.message}`));
         })
         .on("end", () => {
+          console.log("✅ Audio conversion completed");
           resolve(true);
         })
         .save(audioPath);
@@ -158,6 +161,7 @@ export async function POST(req: NextRequest) {
     if (audioData.length === 0) {
       throw new Error("Generated audio file is empty");
     }
+    console.log(`✅ Audio file read: ${audioData.length} bytes`);
 
     // Transcribe
     const transcriptionText = await transcribeAudio(audioData);
@@ -166,8 +170,8 @@ export async function POST(req: NextRequest) {
     const cleanedText = transcriptionText
       .replace(/\s+/g, ' ')
       .trim();
+    console.log("✅ Transcription cleaned");
 
-   
     let summary = null;
     if (cleanedText.length > 0) {
       try {
