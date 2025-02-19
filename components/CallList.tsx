@@ -60,6 +60,8 @@ const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
         { videoUrl },
         {
           timeout: 300000,
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity,
           headers: {
             'Content-Type': 'application/json',
           },

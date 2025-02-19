@@ -5,6 +5,15 @@ import path from "path";
 import { promisify } from "util";
 import fs from "fs";
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb'
+    },
+    responseLimit: false
+  }
+};
+
 let ffmpeg: any;
 if (process.env.NODE_ENV === 'production') {
   const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
