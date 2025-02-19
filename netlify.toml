@@ -10,13 +10,7 @@
   external_node_modules = ["fluent-ffmpeg", "@huggingface/inference"]
   included_files = ["node_modules/fluent-ffmpeg/**/*"]
 
-# Increase function limits
 [functions.api-transcribe]
   maxDuration = 300
   memory = 3008
   timeout = 300
-
-# Add environment variable
-[build.environment]
-  NODE_VERSION = "18"
-  NEXT_PUBLIC_BASE_URL = "http://localhost:8888"
