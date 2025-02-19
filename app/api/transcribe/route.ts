@@ -64,12 +64,12 @@ async function cleanupFiles(...files: string[]) {
 async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
   console.log("🎯 Starting transcription with HuggingFace...");
   try {
-    // Create FormData and append the audio buffer
+    
     const formData = new FormData();
     const audioBlob = new Blob([audioBuffer], { type: 'audio/mp3' });
     formData.append('audio', audioBlob, 'audio.mp3');
 
-    // Make a direct fetch request to HuggingFace API
+    
     const response = await fetch(
       `https://api-inference.huggingface.co/models/openai/whisper-large-v3`,
       {
