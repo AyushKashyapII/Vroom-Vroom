@@ -1,12 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { HfInference } from "@huggingface/inference";
-import ffmpegPath from "@ffmpeg-installer/ffmpeg";
-import ffmpeg from "fluent-ffmpeg";
-import { Readable, Writable } from "stream";
-import { Buffer } from "buffer";
+import { tmpdir } from "os";
+import path from "path";
+import { promisify } from "util";
+import fs from "fs";
 
-// Set FFmpeg path for the WebAssembly version
-ffmpeg.setFfmpegPath(ffmpegPath.path);
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb'
+    },
+    responseLimit: false
+  }
+};
+
+let ffmpeg: any;
+if (process.env.NODE_ENV === 'production') {
+  const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+  ffmpeg = require('fluent-ffmpeg');
+  ffmpeg.setFfmpegPath(ffmpegPath);
+} else {
+  const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+  ffmpeg = require('fluent-ffmpeg');
+  ffmpeg.setFfmpegPath(ffmpegPath);
+}
+
+const writeFile = promisify(fs.writeFile);
+const unlink = promisify(fs.unlink);
+const readFile = promisify(fs.readFile);
 
 console.log("🚀 Initializing HuggingFace client...");
 if (!process.env.HUGGINGFACE_API_KEY) {
@@ -17,7 +38,7 @@ const hf = new HfInference(process.env.HUGGINGFACE_API_KEY!);
 console.log("✅ HuggingFace client initialized");
 
 async function fetchWithTimeout(url: string, timeout: number) {
-  console.log("⏳ Starting fetch with timeout:", url);
+  console.log("⏳ Starting fetch with timeout:", timeout);
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -27,11 +48,6 @@ async function fetchWithTimeout(url: string, timeout: number) {
     });
     clearTimeout(timeoutId);
     console.log("✅ Fetch completed successfully");
-    
-    if (!response.ok) {
-      throw new Error(`Failed to download video: ${response.status} ${response.statusText}`);
-    }
-    
     return response;
   } catch (error) {
     clearTimeout(timeoutId);
@@ -40,63 +56,48 @@ async function fetchWithTimeout(url: string, timeout: number) {
   }
 }
 
-// Fixed in-memory FFmpeg converter
-async function convertVideoToAudio(videoBuffer: Buffer): Promise<Buffer> {
-  console.log("🔄 Converting video to audio in memory...");
-  
-  return new Promise((resolve, reject) => {
-    // Create readable stream from video buffer
-    const videoStream = new Readable();
-    videoStream._read = () => {}; // Required implementation
-    videoStream.push(videoBuffer);
-    videoStream.push(null);
-    
-    // Create a writable stream to collect audio data
-    const audioChunks: Uint8Array[] = [];
-    const outputStream = new Writable({
-      write(chunk, encoding, callback) {
-        audioChunks.push(chunk);
-        callback();
+async function cleanupFiles(...files: string[]) {
+  console.log("🧹 Starting cleanup of files:", files);
+  for (const file of files) {
+    try {
+      if (fs.existsSync(file)) {
+        await unlink(file);
+        console.log(`✅ Cleaned up file: ${file}`);
       }
-    });
-    
-    ffmpeg(videoStream)
-      .inputFormat('mp4')
-      .noVideo()
-      .audioCodec('libmp3lame')
-      .audioChannels(1)
-      .audioFrequency(16000)
-      .audioBitrate('64k')
-      .format('mp3')
-      .on("error", (err: Error) => {
-        console.error("❌ Audio conversion failed:", err);
-        reject(new Error(`Audio conversion failed: ${err.message}`));
-      })
-      .on("end", () => {
-        console.log("✅ Audio conversion completed");
-        resolve(Buffer.concat(audioChunks));
-      })
-      .pipe(outputStream);
-  });
+    } catch (error) {
+      console.error(`❌ Error cleaning up file ${file}:`, error);
+    }
+  }
 }
 
 async function transcribeAudio(audioBuffer: Buffer): Promise<string> {
   console.log("🎯 Starting transcription with HuggingFace...");
   try {
-    const blob = new Blob([audioBuffer], { type: 'audio/mp3' });
     
-    const transcription = await hf.automaticSpeechRecognition({
-      data: blob,
-      model: "openai/whisper-large-v3",
-      parameters: {
-        language: "en",
-        return_timestamps: false,
-        chunk_length_s: 30
-      }
-    });
+    const formData = new FormData();
+    const audioBlob = new Blob([audioBuffer], { type: 'audio/mp3' });
+    formData.append('audio', audioBlob, 'audio.mp3');
 
-    console.log("✅ Transcription completed");
-    return transcription.text;
+    
+    const response = await fetch(
+      `https://api-inference.huggingface.co/models/openai/whisper-large-v3`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.HUGGINGFACE_API_KEY}`
+        },
+        body: formData
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HuggingFace API error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log("✅ Transcription completed", result);
+    return result.text;
+
   } catch (error) {
     console.error("❌ Transcription error:", error);
     throw new Error(`Transcription failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -121,7 +122,7 @@ async function generateSummary(text: string, maxRetries = 3): Promise<string> {
         }
       });
       
-      console.log("✅ Summary generated successfully", summary.summary_text);
+      console.log("✅ Summary generated successfully");
       return summary.summary_text;
     } catch (error) {
       attempt++;
@@ -129,7 +130,7 @@ async function generateSummary(text: string, maxRetries = 3): Promise<string> {
       
       if (attempt === maxRetries) {
         console.error("❌ All summary attempts exhausted");
-        throw new Error(`Failed to generate summary after ${maxRetries} attempts: ${error}`);
+        throw new Error(`Failed to generate summary after ${maxRetries} attempts`);
       }
       
       await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
@@ -138,17 +139,14 @@ async function generateSummary(text: string, maxRetries = 3): Promise<string> {
   throw new Error("Failed to generate summary");
 }
 
-export const config = {
-  runtime: 'edge', // This is important for Netlify Edge Functions
-  maxDuration: 25000, // Set max duration to be under Netlify's limit (26s)
-};
-
 export async function POST(req: NextRequest) {
   console.log("\n🎬 Starting new transcription request...");
+  const videoPath = path.join(tmpdir(), `temp-${Date.now()}.mp4`);
+  const audioPath = path.join(tmpdir(), `temp-${Date.now()}.mp3`);
 
   try {
     const { videoUrl } = await req.json();
-    console.log("📌 Video URL received:", videoUrl);
+    console.log("📌 Video URL received:");
 
     if (!videoUrl) {
       return NextResponse.json(
@@ -157,47 +155,52 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate URL format before attempting to fetch
-    try {
-      new URL(videoUrl);
-    } catch (e) {
-      console.error("❌ Invalid URL format:", videoUrl);
-      return NextResponse.json(
-        { error: "Invalid video URL format" },
-        { status: 400 }
+    // Download video
+    const videoResponse = await fetchWithTimeout(videoUrl, 30000);
+    if (!videoResponse.ok) {
+      throw new Error(
+        `Failed to download video: ${videoResponse.status} ${videoResponse.statusText}`
       );
     }
 
-    // Download video
-    const videoResponse = await fetchWithTimeout(videoUrl, 15000);
-    const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
-    console.log(`📦 Downloaded video: ${videoBuffer.length} bytes`);
+    // Save video file
+    const buffer = await videoResponse.arrayBuffer();
+    await writeFile(videoPath, new Uint8Array(buffer));
+    console.log("✅ Video file saved");
 
-    // Check if we actually got video data
-    if (videoBuffer.length === 0) {
-      console.error("❌ Downloaded video is empty");
-      throw new Error("Downloaded video is empty");
+    // Convert to audio with optimal settings for Whisper
+    await new Promise((resolve, reject) => {
+      ffmpeg(videoPath)
+        .toFormat("mp3")
+        .audioChannels(1)          
+        .audioFrequency(16000)     
+        .audioBitrate('64k')       
+        .on("error", (err: Error) => {
+          console.error("❌ FFmpeg error:", err);
+          reject(new Error(`Audio conversion failed: ${err.message}`));
+        })
+        .on("end", () => {
+          console.log("✅ Audio conversion completed");
+          resolve(true);
+        })
+        .save(audioPath);
+    });
+
+    // Read and verify audio file
+    const audioData = await readFile(audioPath);
+    if (audioData.length === 0) {
+      throw new Error("Generated audio file is empty");
     }
-
-    // Convert to audio in memory
-    const audioBuffer = await convertVideoToAudio(videoBuffer);
-    console.log(`🔊 Converted audio: ${audioBuffer.length} bytes`);
-
-    // Check if we got audio data
-    if (audioBuffer.length === 0) {
-      console.error("❌ Generated audio is empty");
-      throw new Error("Generated audio is empty");
-    }
+    console.log(`✅ Audio file read: ${audioData.length} bytes`);
 
     // Transcribe
-    const transcriptionText = await transcribeAudio(audioBuffer);
+    const transcriptionText = await transcribeAudio(audioData);
     
     // Clean the transcription text
     const cleanedText = transcriptionText
       .replace(/\s+/g, ' ')
       .trim();
-    
-    console.log(`📄 Transcription complete: ${cleanedText.substring(0, 50)}...`);
+    console.log("✅ Transcription cleaned");
 
     let summary = null;
     if (cleanedText.length > 0) {
@@ -208,57 +211,24 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    console.log("✅ Process completed successfully");
-    
-    // Return with CORS headers for cross-domain access
-    return new NextResponse(
-      JSON.stringify({
-        transcription: cleanedText,
-        summary: summary || "Summary generation failed",
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        },
-      }
-    );
+    return NextResponse.json({
+      transcription: cleanedText,
+      summary: summary || "Summary generation failed",
+    });
 
   } catch (error) {
     console.error("❌ Process failed with error:", error);
-    
-    // Return error with CORS headers
-    return new NextResponse(
-      JSON.stringify({
-        error: "Transcription failed", 
-        details: error instanceof Error ? error.message : "Unknown error"
-      }),
+    return NextResponse.json(
       { 
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        },
-      }
+        error: "Transcription failed", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      },
+      { status: 500 }
     );
-  }
-}
 
-export async function OPTIONS(req: NextRequest) {
-  // Handle CORS preflight requests
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
+  } finally {
+    await cleanupFiles(videoPath, audioPath);
+  }
 }
 
 export async function GET() {
