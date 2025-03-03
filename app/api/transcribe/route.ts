@@ -5,14 +5,17 @@ import path from "path";
 import { promisify } from "util";
 import fs from "fs";
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '50mb'
-    },
-    responseLimit: false
-  }
-};
+// export const config = {
+//   api: {
+//     bodyParser: {
+//       sizeLimit: '50mb'
+//     },
+//     responseLimit: false
+//   }
+// };
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 let ffmpeg: any;
 if (process.env.NODE_ENV === 'production') {
