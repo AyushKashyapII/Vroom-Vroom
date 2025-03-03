@@ -58,7 +58,10 @@ const MeetingCard = ({
 
         {!isPreviousMeeting && (
           <div className="flex gap-2">
-            <Button onClick={handleClick} className="rounded bg-blue-1 px-6">
+            <Button
+              onClick={handleClick}
+              className="rounded bg-blue-1 px-6 sm:w-[25%]"
+            >
               {buttonIcon1 && (
                 <Image src={buttonIcon1} alt="feature" width={20} height={20} />
               )}
@@ -66,7 +69,7 @@ const MeetingCard = ({
             </Button>
             <Button
               onClick={handleSummarize}
-              className="rounded bg-blue-1 px-6"
+              className="rounded bg-blue-1 px-6 sm:w-[25%]"
             >
               Summarize
             </Button>
@@ -77,7 +80,7 @@ const MeetingCard = ({
                   title: 'Link Copied',
                 });
               }}
-              className="bg-dark-4 px-6"
+              className="bg-dark-4 px-6 sm:w-[25%]"
             >
               &nbsp; Copy Link
             </Button>
