@@ -15,7 +15,6 @@
 - **getstream** for chat and video streams
 - **Clerk** for authentication
 - **Node.js**, **Express.js** (if applicable)
-- **Socket.IO** for real-time interactions
 
 ---
 
