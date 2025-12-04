@@ -2,6 +2,7 @@
 
 **Vroom Vroom** is a full-stack video conferencing web app inspired by Zoom. It supports real-time communication, user authentication, and meeting management features — built using modern web technologies.
 ---
+
 ## ⚙️ Tech Stack
 
 ### Frontend
